@@ -91,4 +91,9 @@ public class UserController {
         }
         throw new RequiredRoleMissingException(REQUIRED_ROLE);
     }
+
+    @GetMapping("/random")
+    public String getRandom() {
+        return "hello random";
+    }
 }
