@@ -21,7 +21,7 @@ class UserServiceApplicationTests {
     void contextLoads() {
         RegisteredClient oidcClient = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("oidc-client")
-                .clientSecret("$2a$12$/3W7ghBNo20aP2IYoTg0cuPeN14sF0LOXIQgKNDDVtIdwtH26l2rW")
+                .clientSecret("$2a$12$/3W7ghBNo20aP2IYoTg0cuPeN14sF0LOXIQgKNDDVtIdwtH26l2rW") //secret
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)

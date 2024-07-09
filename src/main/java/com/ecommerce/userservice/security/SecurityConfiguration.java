@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,7 +53,7 @@ import java.util.stream.Collectors;
 public class SecurityConfiguration {
 
     @Bean
-    @Order
+    @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
@@ -75,15 +76,18 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Order
+    @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/user/signup"))
                 .authorizeHttpRequests((authorize) -> authorize
-                        .anyRequest().authenticated()
+                        .requestMatchers("/user/signup").permitAll()
+                                .anyRequest().authenticated()
                 )
                 // Form login handles the redirect to the login page from the
                 // authorization server filter chain
+                .cors(AbstractHttpConfigurer::disable)
                 .formLogin(Customizer.withDefaults());
 
         return http.build();

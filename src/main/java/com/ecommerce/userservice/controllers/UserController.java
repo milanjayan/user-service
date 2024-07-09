@@ -44,7 +44,7 @@ public class UserController {
             throw new SignupCredentialMissingException("phone number");
         }
         if(dto.getPassword() == null) {
-            throw new SignupCredentialMissingException("name");
+            throw new SignupCredentialMissingException("password");
         }
     }
 
