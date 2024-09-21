@@ -3,10 +3,9 @@ package com.ecommerce.userservice.exceptions;
 import lombok.Getter;
 
 @Getter
-public class TokenExpiredException extends Throwable {
-
+public class RolesNotDefinedException extends Throwable {
     private String message;
-    public TokenExpiredException(String message) {
+    public RolesNotDefinedException(String message) {
         this.message = message;
     }
 }

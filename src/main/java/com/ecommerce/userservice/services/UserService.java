@@ -1,26 +1,25 @@
 package com.ecommerce.userservice.services;
 
 import com.ecommerce.userservice.exceptions.*;
-import com.ecommerce.userservice.models.Token;
-import com.ecommerce.userservice.models.TokenType;
+import com.ecommerce.userservice.models.Role;
 import com.ecommerce.userservice.models.User;
-import com.ecommerce.userservice.repositories.TokenRepository;
 import com.ecommerce.userservice.repositories.UserRepository;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
+
+import javax.management.relation.RoleNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class UserService {
     private UserRepository userRepository;
+    private RoleService roleService;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private TokenRepository tokenRepository;
 
     public User signup(User user) throws PasswordLengthTooShortException, EmailAlreadyRegisteredException {
         validate(user);
@@ -39,66 +38,93 @@ public class UserService {
         }
     }
 
-    public Token login(String email, String password) throws UserNotFoundException, PasswordDoesNotMatchException, TokenLimitExceededException {
+    public User grantRoles(String email, List<Role> roles) throws UserNotFoundException, RolesNotDefinedException {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         optionalUser.orElseThrow(() -> new UserNotFoundException("User with email "+email+" not found"));
         User user = optionalUser.get();
-        if(!bCryptPasswordEncoder.matches(password, user.getPassword())) {
-            throw new PasswordDoesNotMatchException(password);
+        List<String> roleNames = roles.stream()
+                .map(Role::getName)
+                .toList();
+        List<Role> definedRoles = roleService.findRolesByNameIn(roleNames);
+        List<String> definedRoleNames = definedRoles.stream()
+                .map(Role::getName)
+                .toList();
+        validate(roleNames, definedRoleNames);
+        user.setRoles(definedRoles);
+        return userRepository.save(user);
+    }
+
+    public void validate(List<String> roleNames, List<String> definedRoleNames) throws RolesNotDefinedException {
+        List<String> invalidRoleNames = roleNames.stream().map(String::toLowerCase)
+                .filter(roleName -> !definedRoleNames.contains(roleName))
+                .toList();
+        if(!invalidRoleNames.isEmpty()) {
+            throw new RolesNotDefinedException("These role(s) are not defined "+invalidRoleNames);
         }
-        int MAX_TOKEN_COUNT = 2;
-        if(user.getTokenCount() >= MAX_TOKEN_COUNT) {
-            throw new TokenLimitExceededException(MAX_TOKEN_COUNT);
-        }
-        Token token = generateToken(user);
-        int tokenCount = user.getTokenCount() + 1;
-        user.setTokenCount(tokenCount);
-        userRepository.save(user);
-        return tokenRepository.save(token);
     }
 
 
-    private Token generateToken(User user) {
-        long NUMBER_OF_DAYS = 30L;
-        LocalDate today = LocalDate.now();
-        LocalDate dateAfter30days = today.plusDays(NUMBER_OF_DAYS);
-        Date expiryDate = Date.from(dateAfter30days.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        return Token.builder()
-                .value(RandomStringUtils.randomAlphanumeric(128))
-                .expiryDate(expiryDate)
-                .type(TokenType.ACCESS)
-                .user(user)
-                .build();
-    }
-    public void logout(String tokenValue) throws InvalidTokenException {
-        Optional<Token> optionalToken = tokenRepository.findByValueAndIsDeleted(tokenValue, false);
-        optionalToken.orElseThrow(() -> new InvalidTokenException("Token is invalid"));
-        Token token = optionalToken.get();
-        token.setDeleted(true);
-        tokenRepository.save(token);
-        User user = token.getUser();
-        int tokenCount = user.getTokenCount();
-        user.setTokenCount(tokenCount-1);
-        userRepository.save(user);
-    }
-
-    public User verifyToken(String tokenValue) throws InvalidTokenException, TokenExpiredException {
-        Optional<Token> optionalToken = tokenRepository.findByValueAndIsDeleted(tokenValue, false);
-        optionalToken.orElseThrow(() -> new InvalidTokenException("Token is invalid"));
-        Token token = optionalToken.get();
-        Date currentDate = new Date();
-        if(currentDate.after(token.getExpiryDate())) {
-            token.setDeleted(true);
-            tokenRepository.save(token);
-            throw new TokenExpiredException("Token has expired");
-        }
-        return token.getUser();
-    }
+//    public Token login(String email, String password) throws UserNotFoundException, PasswordDoesNotMatchException, TokenLimitExceededException {
+//        Optional<User> optionalUser = userRepository.findByEmail(email);
+//        optionalUser.orElseThrow(() -> new UserNotFoundException("User with email "+email+" not found"));
+//        User user = optionalUser.get();
+//        if(!bCryptPasswordEncoder.matches(password, user.getPassword())) {
+//            throw new PasswordDoesNotMatchException(password);
+//        }
+//        int MAX_TOKEN_COUNT = 2;
+//        if(user.getTokenCount() >= MAX_TOKEN_COUNT) {
+//            throw new TokenLimitExceededException(MAX_TOKEN_COUNT);
+//        }
+//        Token token = generateToken(user);
+//        int tokenCount = user.getTokenCount() + 1;
+//        user.setTokenCount(tokenCount);
+//        userRepository.save(user);
+//        return tokenRepository.save(token);
+//    }
+//
+//
+//    private Token generateToken(User user) {
+//        long NUMBER_OF_DAYS = 30L;
+//        LocalDate today = LocalDate.now();
+//        LocalDate dateAfter30days = today.plusDays(NUMBER_OF_DAYS);
+//        Date expiryDate = Date.from(dateAfter30days.atStartOfDay(ZoneId.systemDefault()).toInstant());
+//        return Token.builder()
+//                .value(RandomStringUtils.randomAlphanumeric(128))
+//                .expiryDate(expiryDate)
+//                .type(TokenType.ACCESS)
+//                .user(user)
+//                .build();
+//    }
+//    public void logout(String tokenValue) throws InvalidTokenException {
+//        Optional<Token> optionalToken = tokenRepository.findByValueAndIsDeleted(tokenValue, false);
+//        optionalToken.orElseThrow(() -> new InvalidTokenException("Token is invalid"));
+//        Token token = optionalToken.get();
+//        token.setDeleted(true);
+//        tokenRepository.save(token);
+//        User user = token.getUser();
+//        int tokenCount = user.getTokenCount();
+//        user.setTokenCount(tokenCount-1);
+//        userRepository.save(user);
+//    }
+//
+//    public User verifyToken(String tokenValue) throws InvalidTokenException, TokenExpiredException {
+//        Optional<Token> optionalToken = tokenRepository.findByValueAndIsDeleted(tokenValue, false);
+//        optionalToken.orElseThrow(() -> new InvalidTokenException("Token is invalid"));
+//        Token token = optionalToken.get();
+//        Date currentDate = new Date();
+//        if(currentDate.after(token.getExpiryDate())) {
+//            token.setDeleted(true);
+//            tokenRepository.save(token);
+//            throw new TokenExpiredException("Token has expired");
+//        }
+//        return token.getUser();
+//    }
 
     public User getUserById(Long id) throws UserNotFoundException {
         Optional<User> optionalUser = userRepository.findById(id);
         optionalUser.orElseThrow(() -> new UserNotFoundException("User with id "+id+" not found"));
         return optionalUser.get();
     }
+
 
 }

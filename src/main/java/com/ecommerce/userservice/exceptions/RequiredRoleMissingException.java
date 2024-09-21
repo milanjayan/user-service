@@ -3,7 +3,7 @@ package com.ecommerce.userservice.exceptions;
 import lombok.Getter;
 
 @Getter
-public class RequiredRoleMissingException extends Throwable {
+public class RequiredRoleMissingException extends Exception {
 
     private String requiredRole;
     public RequiredRoleMissingException(String requiredRole) {

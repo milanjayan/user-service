@@ -80,9 +80,13 @@ public class SecurityConfiguration {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/user/signup"))
+//                .csrf(csrf -> csrf.ignoringRequestMatchers("/user/signup"))
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/user/signup").permitAll()
+                        .requestMatchers("/user/grant-roles").permitAll()
+                        .requestMatchers("/client/register").permitAll()
+                        .requestMatchers("/role/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 // Form login handles the redirect to the login page from the

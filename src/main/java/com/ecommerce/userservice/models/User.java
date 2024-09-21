@@ -23,7 +23,4 @@ public class User extends BaseModel {
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles = new ArrayList<>();
     private boolean isVerified = false;
-    @OneToMany(mappedBy = "user")
-    private List<Token> tokens = new ArrayList<>();
-    private int tokenCount = 0;
 }

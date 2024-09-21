@@ -2,10 +2,13 @@ package com.ecommerce.userservice.exceptions;
 
 
 import com.ecommerce.userservice.dtos.ExceptionDto;
+import jakarta.persistence.NoResultException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import javax.management.relation.RoleNotFoundException;
 
 @ControllerAdvice
 public class ExceptionHandlers {
@@ -55,14 +58,6 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(TokenLimitExceededException.class)
-    public ResponseEntity<ExceptionDto> handleTokenLimitExceededException(TokenLimitExceededException exception) {
-        ExceptionDto response = ExceptionDto.builder()
-                .message("Token limit of "+exception.getTokenLimit()+" exceeded")
-                .resolution("Logout a session to login again")
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ExceptionDto> handleUserNotFoundException(UserNotFoundException exception) {
@@ -70,16 +65,25 @@ public class ExceptionHandlers {
                 .message(exception.getMessage())
                 .resolution("Try different user")
                 .build();
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ExceptionDto> handleInvalidTokenException(InvalidTokenException exception) {
+    @ExceptionHandler(NoRolesFoundException.class)
+    public ResponseEntity<ExceptionDto> handleNoRolesFoundException(NoRolesFoundException exception) {
         ExceptionDto response = ExceptionDto.builder()
-                .message("Authentication token is invalid")
-                .resolution("")
+                .message(exception.getMessage())
+                .resolution("Create at least one role")
                 .build();
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<ExceptionDto> handleRoleNotFoundException(RoleNotFoundException exception) {
+        ExceptionDto response = ExceptionDto.builder()
+                .message(exception.getMessage())
+                .resolution("Give another id")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(RequiredRoleMissingException.class)
@@ -91,4 +95,31 @@ public class ExceptionHandlers {
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(ClientNotFoundException.class)
+    public ResponseEntity<ExceptionDto> handleClientNotFoundException(ClientNotFoundException exception) {
+        ExceptionDto response = ExceptionDto.builder()
+                .message(exception.getMessage())
+                .resolution("Try again with different client id")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+
+    @ExceptionHandler(NoClientsFoundException.class)
+    public ResponseEntity<ExceptionDto> handleNoClientsFoundException(NoClientsFoundException exception) {
+        ExceptionDto response = ExceptionDto.builder()
+                .message(exception.getMessage())
+                .resolution("Try again after registering a client")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ClientRegistrationCredentialMissingException.class)
+    public ResponseEntity<ExceptionDto> handleClientRegistrationCredentialMissingException(ClientRegistrationCredentialMissingException exception) {
+        ExceptionDto exceptionDto = ExceptionDto.builder()
+                .message(exception.getMessage())
+                .resolution(exception.getResolution())
+                .build();
+        return new ResponseEntity<>(exceptionDto, HttpStatus.BAD_REQUEST);
+    }
 }
