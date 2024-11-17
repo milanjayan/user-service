@@ -23,6 +23,13 @@ public class UserController {
 
     private UserService userService;
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) throws UserNotFoundException {
+        User user = userService.getUserById(id);
+        UserDto responseDto = UserWrapper.dtoFrom(user);
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+    }
+
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signup(@RequestBody SignupRequestDto dto) throws SignupCredentialMissingException, PasswordLengthTooShortException, EmailAlreadyRegisteredException {
         validate(dto);

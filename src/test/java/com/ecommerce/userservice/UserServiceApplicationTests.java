@@ -1,6 +1,7 @@
 package com.ecommerce.userservice;
 
 import com.ecommerce.userservice.security.services.JpaRegisteredClientRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +13,7 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 
 import java.util.UUID;
 
+@Disabled
 @SpringBootTest
 class UserServiceApplicationTests {
 

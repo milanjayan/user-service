@@ -11,8 +11,10 @@ import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -50,10 +52,10 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
     @Bean
-    @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
@@ -76,22 +78,21 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
-//                .csrf(csrf -> csrf.ignoringRequestMatchers("/user/signup"))
+                .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/user/signup").permitAll()
-                        .requestMatchers("/user/grant-roles").permitAll()
-                        .requestMatchers("/client/register").permitAll()
-                        .requestMatchers("/role/**").permitAll()
-                                .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/user/signup",
+                                "/user/grant-roles",
+                                "/client/register-client",
+                                "/role/**").permitAll()
+                        .anyRequest().permitAll()
                 )
                 // Form login handles the redirect to the login page from the
                 // authorization server filter chain
-                .cors(AbstractHttpConfigurer::disable)
                 .formLogin(Customizer.withDefaults());
 
         return http.build();
