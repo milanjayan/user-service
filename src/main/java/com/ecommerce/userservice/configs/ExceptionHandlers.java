@@ -1,8 +1,9 @@
-package com.ecommerce.userservice.exceptions;
+package com.ecommerce.userservice.configs;
 
 
 import com.ecommerce.userservice.dtos.ExceptionDto;
-import jakarta.persistence.NoResultException;
+import com.ecommerce.userservice.exceptions.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -121,5 +122,13 @@ public class ExceptionHandlers {
                 .resolution(exception.getResolution())
                 .build();
         return new ResponseEntity<>(exceptionDto, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<ExceptionDto> handleJsonProcessingException(JsonProcessingException exception) {
+        ExceptionDto response = ExceptionDto.builder()
+                .message(exception.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

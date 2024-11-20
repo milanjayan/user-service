@@ -9,6 +9,7 @@ import com.ecommerce.userservice.models.User;
 import com.ecommerce.userservice.services.UserService;
 import com.ecommerce.userservice.wrappers.RoleWrapper;
 import com.ecommerce.userservice.wrappers.UserWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserDto> signup(@RequestBody SignupRequestDto dto) throws SignupCredentialMissingException, PasswordLengthTooShortException, EmailAlreadyRegisteredException {
+    public ResponseEntity<UserDto> signup(@RequestBody SignupRequestDto dto) throws SignupCredentialMissingException, PasswordLengthTooShortException, EmailAlreadyRegisteredException, JsonProcessingException {
         validate(dto);
         User user = UserWrapper.entityFrom(dto);
         User responseUser = userService.signup(user);

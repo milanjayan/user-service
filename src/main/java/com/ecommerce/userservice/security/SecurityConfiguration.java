@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
 public class SecurityConfiguration {
 
     @Bean
+    @Order(2)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
@@ -78,18 +79,18 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers(
-                                "/user/signup",
-                                "/user/grant-roles",
-                                "/client/register-client",
-                                "/role/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/user/signup").permitAll()
+                        .requestMatchers("/user/grant-roles").permitAll()
+                        .requestMatchers("/client/register-client").permitAll()
+                        .requestMatchers("/role/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 // Form login handles the redirect to the login page from the
                 // authorization server filter chain

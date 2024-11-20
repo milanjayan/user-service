@@ -1,10 +1,15 @@
 package com.ecommerce.userservice.services;
 
+import com.ecommerce.userservice.configs.KafkaService;
+import com.ecommerce.userservice.dtos.SendEmailMessageDto;
 import com.ecommerce.userservice.exceptions.*;
 import com.ecommerce.userservice.models.Role;
 import com.ecommerce.userservice.models.User;
 import com.ecommerce.userservice.repositories.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.apache.kafka.common.network.Send;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +25,21 @@ public class UserService {
     private UserRepository userRepository;
     private RoleService roleService;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private KafkaService kafkaService;
+    private ObjectMapper objectMapper;
 
-    public User signup(User user) throws PasswordLengthTooShortException, EmailAlreadyRegisteredException {
+    public User signup(User user) throws PasswordLengthTooShortException, EmailAlreadyRegisteredException, JsonProcessingException {
+        final String KAFKA_TOPIC_SEND_EMAIL = "sendEmail";
         validate(user);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        User savedUser =  userRepository.save(user);
+        SendEmailMessageDto sendEmailMessageDto = SendEmailMessageDto.builder()
+                .to(savedUser.getEmail())
+                .subject("Welcome Note")
+                .body("Welcome "+savedUser.getName()+"."+" Thank you for joining our ecom platform! Explore amazing products and enjoy a seamless shopping experience.")
+                .build();
+        kafkaService.sendMessage(KAFKA_TOPIC_SEND_EMAIL, objectMapper.writeValueAsString(sendEmailMessageDto));
+        return savedUser;
     }
 
     private void validate(User user) throws PasswordLengthTooShortException, EmailAlreadyRegisteredException {

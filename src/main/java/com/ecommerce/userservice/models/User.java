@@ -23,4 +23,5 @@ public class User extends BaseModel {
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles = new ArrayList<>();
     private boolean isVerified = false;
+    private int token_count = 0;
 }
